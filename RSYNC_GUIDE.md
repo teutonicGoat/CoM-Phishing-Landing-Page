@@ -79,7 +79,7 @@ rsync -avz --files-from=folders.txt remotehost:/src/ /local/destination/
 
 ```bash
 # Sync specific image folders to local images directory
-rsync -avzP remotehost:/var/www/phishing-page/images/ ./images/
+rsync -avzP remotehost:/path/to/remote/images/ ./images/
 ```
 
 ### Testing Before Actual Sync

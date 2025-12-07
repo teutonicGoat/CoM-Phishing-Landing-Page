@@ -4,7 +4,7 @@
 # Script to sync specific folders from a remote host using rsync
 # Usage: ./sync-folders.sh <remote_host> <remote_path> <local_destination>
 
-set -e  # Exit on error
+set -euo pipefail  # Exit on error, undefined variables, and pipe failures
 
 # Color codes for output
 RED='\033[0;31m'
@@ -49,13 +49,13 @@ FOLDERS=(
     "Folder 03"
 )
 
-# rsync options
-RSYNC_OPTIONS="-avzP"
+# rsync options as an array
+RSYNC_OPTIONS=(-a -v -z -P)
 
 # Optional: Add --dry-run to test without actually syncing
 DRY_RUN=${DRY_RUN:-false}
 if [ "$DRY_RUN" = "true" ]; then
-    RSYNC_OPTIONS="$RSYNC_OPTIONS --dry-run"
+    RSYNC_OPTIONS+=(--dry-run)
     print_warning "DRY RUN MODE - No files will be actually transferred"
 fi
 
@@ -68,11 +68,13 @@ fi
 # Function to sync a single folder
 sync_folder() {
     local folder=$1
-    local remote_folder="$REMOTE_HOST:$REMOTE_PATH/$folder"
+    # Properly construct the remote path, removing any trailing slashes from REMOTE_PATH
+    local remote_base="${REMOTE_PATH%/}"
+    local remote_folder="$REMOTE_HOST:$remote_base/$folder"
     
     print_info "Syncing: $folder"
     
-    if rsync $RSYNC_OPTIONS "$remote_folder" "$LOCAL_DEST/"; then
+    if rsync "${RSYNC_OPTIONS[@]}" "$remote_folder" "$LOCAL_DEST/"; then
         print_info "Successfully synced: $folder"
         return 0
     else
